@@ -20,6 +20,7 @@
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
     <link rel="dns-prefetch" href="https://www.clarity.ms">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <!-- GTM -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-TXQGZRF9');</script>
     <!-- Clarity -->
@@ -32,11 +33,11 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', 'Noto Sans JP', sans-serif; background: linear-gradient(135deg, #E0E7FF 0%, #F0F4FF 100%); min-height: 100vh; color: #333; line-height: 1.6; }
-        .site-header { background: #6366F1; color: white; padding: 32px 20px; text-align: center; }
+        .site-header { background: #6366F1; color: white; padding: 24px 20px; text-align: center; }
         .site-header .emoji { font-size: 52px; margin-bottom: 8px; }
         .site-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
         .site-header p { font-size: 14px; opacity: 0.9; }
-        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; margin-top: -8px; }
         .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 16px; }
         .btn { background: #6366F1; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: opacity .2s; min-height: 48px; touch-action: manipulation; }
         .btn:hover { opacity: 0.9; }
@@ -51,18 +52,41 @@
         .badge { display: inline-block; background: #6366F120; color: #6366F1; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
         @media (max-width: 480px) {
-            .site-header { padding: 24px 16px; }
+            .site-header { padding: 20px 16px; }
             .site-header h1 { font-size: 20px; }
-            .card { padding: 16px; }
+            .card { padding: 14px; margin-bottom: 12px; }
             .btn { font-size: 15px; padding: 13px 20px; }
             .result-value { font-size: 28px; }
+            .card input,.card select{font-size:16px;padding:12px;}
+            .service-link-btn{flex-direction:column;align-items:flex-start;}
+            #resultChart{max-width:100%;}
         }
         /* ── サービス固有CSS ── */
         .card label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px;color:#444;}
+        .label-hint{font-size:12px;font-weight:400;color:#888;margin-left:2px;}
         .card input,.card select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;}
         .result table{width:100%;border-collapse:collapse;margin-top:8px;}
         .result td{padding:6px 4px;border-bottom:1px solid #eee;font-size:14px;}
         .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700;color:#fff;background:#6366F1;}
+        .btn-secondary{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;padding:10px 14px;border-radius:8px;font-size:13px;cursor:pointer;width:auto;display:inline-block;font-weight:600;transition:all .2s;}
+        .btn-secondary:hover{background:#e5e7eb;color:#1f2937;}
+        .btn-cta{background:linear-gradient(135deg,#10b981,#059669);color:white;padding:12px 20px;border-radius:10px;font-weight:600;text-decoration:none;display:inline-block;margin-top:12px;min-height:44px;display:inline-flex;align-items:center;border:none;cursor:pointer;transition:opacity .2s;}
+        .btn-cta:hover{opacity:0.9;}
+        .service-link-btn{background:#6366F120;color:#6366F1;padding:12px 14px;border-radius:10px;border:1.5px solid #6366F1;text-decoration:none;display:flex;align-items:center;justify-content:space-between;font-weight:600;transition:all .2s;min-height:48px;}
+        .service-link-btn:hover{background:#6366F1;color:white;}
+        #resultChart{margin:16px 0;}
+        .history-item{background:#f9fafb;padding:10px;border-radius:8px;margin:6px 0;font-size:13px;cursor:pointer;border:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;transition:all .2s;}
+        .history-item:hover{background:#f3f4f6;border-color:#d1d5db;}
+        .history-label{flex:1;}
+        @media print {
+            body { background: white; }
+            .site-header { background: #6366F1; color: white; }
+            .card { box-shadow: none; border: 1px solid #e5e7eb; }
+            #resultChart { display: none; }
+            .result-actions { display: none; }
+            .ad, ins.adsbygoogle { display: none !important; }
+            .container { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -81,34 +105,53 @@
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 
         <div class="card">
-          <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">☕ コワーキングスペース費用比較</h2>
-          <label for="monthlyFee">月額利用料（円）</label>
-          <input type="number" id="monthlyFee" placeholder="例: 15000">
-          <label for="usageDays">月間利用日数</label>
-          <input type="number" id="usageDays" placeholder="例: 12">
-          <label for="commuteCost">往復交通費（1回・円）</label>
-          <input type="number" id="commuteCost" placeholder="例: 400">
-          <label for="facilityScore">設備・立地の満足度</label>
+          <h2 style="font-size:18px;font-weight:700;margin-bottom:14px;">☕ コワーキングスペース費用比較</h2>
+          <label for="monthlyFee">月額利用料（円） <span class="label-hint">使用するスペースの月額費用</span></label>
+          <input type="number" id="monthlyFee" placeholder="例: 15000" min="0">
+          <label for="usageDays" style="margin-top:12px;">月間利用日数 <span class="label-hint">1ヶ月での利用予定日数</span></label>
+          <input type="number" id="usageDays" placeholder="例: 12" min="0" max="31">
+          <label for="commuteCost" style="margin-top:12px;">往復交通費（1回・円） <span class="label-hint">移動にかかる交通費（往復）</span></label>
+          <input type="number" id="commuteCost" placeholder="例: 400" min="0">
+          <label for="facilityScore" style="margin-top:12px;">設備・立地の満足度 <span class="label-hint">スペースの環境・アメニティの評価</span></label>
           <select id="facilityScore">
             <option value="5">とても良い（個室・電源・高速Wi-Fi完備）</option>
             <option value="3" selected>普通</option>
             <option value="1">物足りない</option>
           </select>
-          <button class="btn" style="margin-top:20px;" onclick="generate()">比較する</button>
+          <button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#6366F1,#4f46e5);font-weight:700;font-size:16px;" onclick="generate()">📊 費用を比較して診断する</button>
+          <p style="margin-top:10px;font-size:12px;color:#888;text-align:center;">✓ 登録不要・無料・ブラウザ内で完結</p>
         </div>
         <div class="result" id="result" style="margin-top:16px;">
           <div class="card">
             <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:#6366F1;">✅ 比較結果</h3>
             <div id="output"></div>
+            <canvas id="resultChart" style="margin:16px 0;max-height:300px;"></canvas>
+            <div class="result-actions" style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn-cta" onclick="saveToHistory()" style="flex:1;min-width:160px;">💾 この結果を保存</button>
+              <button class="btn-secondary" onclick="printResult()" style="flex:1;min-width:160px;">🖨️ 印刷する</button>
+              <button class="btn-secondary" onclick="copyResultToClipboard()" style="flex:1;min-width:160px;">📋 コピー</button>
+              <button class="btn-secondary" onclick="downloadResultAsCSV()" style="flex:1;min-width:160px;">📥 CSV</button>
+            </div>
           </div>
+        </div>
+        <div class="card" id="historyCard" style="display:none;margin-top:12px;">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;">📋 計算履歴</h3>
+          <div id="historyList" style="max-height:200px;overflow-y:auto;"></div>
+          <button class="btn-secondary" style="margin-top:10px;width:100%;" onclick="clearHistory()">履歴をクリア</button>
         </div>
 
         <!-- 関連サービス -->
-        <div class="card" style="margin-top:8px;">
-            <h3 style="font-size:13px;font-weight:600;color:#888;margin-bottom:10px;">🔗 関連サービス</h3>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                <a href="https://appadaycreator.com/home-network-speed-advisor/" style="color:#6366f1;font-size:13px;text-decoration:none;padding:6px 0;border-bottom:1px solid #f1f5f9;">Home Network Speed Advisor →</a>
-                <a href="https://appadaycreator.com/freelance-rate-calculator/" style="color:#6366f1;font-size:13px;text-decoration:none;padding:6px 0;border-bottom:1px solid #f1f5f9;">Freelance Rate Calculator →</a>
+        <div class="card" style="margin-top:12px;">
+            <h3 style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;">🔗 関連する便利ツール</h3>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <a href="https://appadaycreator.com/home-network-speed-advisor/" class="service-link-btn">
+                    <span>🌐 Home Network Speed Advisor</span>
+                    <span style="font-size:18px;">→</span>
+                </a>
+                <a href="https://appadaycreator.com/freelance-rate-calculator/" class="service-link-btn">
+                    <span>💼 Freelance Rate Calculator</span>
+                    <span style="font-size:18px;">→</span>
+                </a>
             </div>
         </div>
 
@@ -176,9 +219,13 @@
         | <a href="contact.html" style="color:white;">お問い合わせ</a></p>
         <p style="margin-top:4px;font-size:11px;opacity:0.6;">最終更新: 2026年5月 | 本サービスはアフィリエイト広告を掲載しています（A8.net/Amazon）</p>
         <p style="margin-top:6px;">© 2026 AppADayCreator. All services are free.</p>
-    </footer>
+    <section style="padding:16px;background:#f0f4ff;margin:16px 0;border-radius:8px;"><h2 style="font-size:1.1em;margin-bottom:8px;">関連コンテンツ</h2><p style="margin:0">他の無料ツールも合わせてご活用ください。<a href="https://appadaycreator.com/" style="color:#4f46e5">ツール一覧を見る →</a></p></section>
+</footer>
 
     <script>
+    let currentResult = null;
+    let chartInstance = null;
+
     function getInputs(){
       const monthlyFee=parseFloat(document.getElementById('monthlyFee').value)||0;
       const usageDays=parseFloat(document.getElementById('usageDays').value)||0;
@@ -187,6 +234,7 @@
       if(!monthlyFee||!usageDays){ alert('月額利用料と利用日数を入力してください'); return null; }
       return {monthlyFee,usageDays,commuteCost,facilityScore};
     }
+
     function buildOutput(inputs){
       const {monthlyFee,usageDays,commuteCost,facilityScore}=inputs;
       const totalCost=monthlyFee+commuteCost*usageDays;
@@ -198,18 +246,129 @@
       else if(diff<=0){verdict='コスト面では有利。設備の満足度も確認しましょう';color='#16A34A';}
       else if(facilityScore>=4){verdict='単価はやや高めですが、設備・環境を重視するなら妥当です';color='#F59E0B';}
       else{verdict='カフェ等の代替と比べて割高な可能性があります。利用日数を増やすと単価が下がります';color='#DC2626';}
+
+      currentResult = {inputs, totalCost, perUse, cafeAlt, verdict, color, timestamp: new Date().toLocaleString('ja-JP')};
+
       return `<table>
         <tr><td>月間総コスト</td><td style="text-align:right;font-weight:700;">${totalCost.toLocaleString()}円</td></tr>
         <tr><td>利用1回あたりの単価</td><td style="text-align:right;font-weight:700;">${perUse.toLocaleString()}円</td></tr>
         <tr><td>カフェ利用の目安単価</td><td style="text-align:right;">${cafeAlt.toLocaleString()}円</td></tr>
       </table>
       <p style="margin-top:12px;"><span class="badge">診断</span></p>
-      <p style="margin-top:8px;font-size:14px;color:${color};font-weight:600;">${verdict}</p>`;
+      <p style="margin-top:8px;font-size:14px;color:${color};font-weight:600;">${verdict}</p>
+      <div style="margin-top:16px;padding:12px;background:#f0f4ff;border-radius:8px;border-left:3px solid #6366F1;">
+        <p style="font-size:12px;color:#374151;margin-bottom:8px;">💡 <strong>次のステップ</strong></p>
+        <a href="https://px.a8.net/svt/ejp?a8mat=3ZHBFV+F5P0KA+CO4+61JSB" target="_blank" rel="noopener" style="background:#6366F1;color:white;padding:10px 14px;border-radius:8px;font-size:13px;text-decoration:none;font-weight:600;display:inline-block;min-height:44px;display:inline-flex;align-items:center;">🔍 コワーキングスペースを検索・比較する</a>
+      </div>`;
     }
-    document.addEventListener('DOMContentLoaded',()=>{});
+
+    function drawChart(result){
+      const ctx = document.getElementById('resultChart').getContext('2d');
+      if(chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['月額利用料', '交通費'],
+          datasets: [{
+            data: [result.inputs.monthlyFee, result.inputs.commuteCost * result.inputs.usageDays],
+            backgroundColor: ['#6366F1', '#8B5CF6'],
+            borderColor: '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {font: {size: 12}, padding: 10}
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.label}: ¥${ctx.parsed.toLocaleString()}`
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function loadFromHistory(entry){
+      document.getElementById('monthlyFee').value = entry.inputs.monthlyFee;
+      document.getElementById('usageDays').value = entry.inputs.usageDays;
+      document.getElementById('commuteCost').value = entry.inputs.commuteCost;
+      document.getElementById('facilityScore').value = entry.inputs.facilityScore;
+      generate();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function saveToHistory(){
+      if(!currentResult) return;
+      let history = JSON.parse(localStorage.getItem('cwkHistory') || '[]');
+      history.unshift(currentResult);
+      if(history.length > 10) history.pop();
+      localStorage.setItem('cwkHistory', JSON.stringify(history));
+      renderHistory();
+      alert('✓ 計算結果を保存しました');
+    }
+
+    function renderHistory(){
+      const history = JSON.parse(localStorage.getItem('cwkHistory') || '[]');
+      const list = document.getElementById('historyList');
+      const card = document.getElementById('historyCard');
+
+      if(history.length === 0){
+        card.style.display = 'none';
+        return;
+      }
+
+      card.style.display = 'block';
+      list.innerHTML = history.map((h, idx) => `
+        <div class="history-item" onclick="loadFromHistory(${JSON.stringify(h).replace(/"/g, '&quot;')})">
+          <span class="history-label">¥${h.totalCost.toLocaleString()} / 1回¥${h.perUse.toLocaleString()}</span>
+          <span style="font-size:11px;color:#888;">${h.timestamp}</span>
+        </div>
+      `).join('');
+    }
+
+    function clearHistory(){
+      if(confirm('履歴をすべて削除しますか？')){
+        localStorage.removeItem('cwkHistory');
+        renderHistory();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      renderHistory();
+    });
+
+    function printResult(){
+      window.print();
+    }
+
+    function copyResultToClipboard(){
+      if(!currentResult) return;
+      const {totalCost,perUse,cafeAlt,verdict}=currentResult;
+      const text=`コワーキングスペース費用比較 結果\n\n月間総コスト: ${totalCost.toLocaleString()}円\n利用1回あたりの単価: ${perUse.toLocaleString()}円\nカフェ利用の目安単価: ${cafeAlt.toLocaleString()}円\n\n診断: ${verdict}`;
+      navigator.clipboard.writeText(text).then(()=>{alert('📋 結果をコピーしました')}).catch(()=>{alert('コピーに失敗しました')});
+    }
+
+    function downloadResultAsCSV(){
+      if(!currentResult) return;
+      const {inputs,totalCost,perUse,cafeAlt,verdict,timestamp}=currentResult;
+      const csv=`項目,値\n月額利用料,${inputs.monthlyFee}\n月間利用日数,${inputs.usageDays}\n往復交通費（1回）,${inputs.commuteCost}\n月間総コスト,${totalCost}\n利用1回あたりの単価,${perUse}\nカフェ利用の目安単価,${cafeAlt}\n診断,${verdict}\n計算日時,${timestamp}`;
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const link=document.createElement('a');
+      link.href=URL.createObjectURL(blob);
+      link.download=`coworking-cost-${new Date().getTime()}.csv`;
+      link.click();
+    }
+
     function generate(){
       const inputs=getInputs(); if(!inputs) return;
       document.getElementById('output').innerHTML=buildOutput(inputs);
+      drawChart(currentResult);
       document.getElementById('result').classList.add('show');
       document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
     }
